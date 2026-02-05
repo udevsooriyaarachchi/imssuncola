@@ -2,9 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import { Product, Invoice } from "../types";
 
 const getAiClient = () => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) return null;
-  return new GoogleGenAI({ apiKey });
+  if (!process.env.API_KEY) return null;
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
 export const generateProductDescription = async (productName: string): Promise<string> => {
