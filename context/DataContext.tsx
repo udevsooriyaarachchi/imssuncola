@@ -38,36 +38,33 @@ const SEED_PRODUCTS: Product[] = [
 ];
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Helper for safe parsing
+  const safeParse = (key: string, fallback: any) => {
+    try {
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : fallback;
+    } catch (e) {
+      console.error(`Error parsing ${key} from localStorage`, e);
+      return fallback;
+    }
+  };
+
   // --- State Initialization ---
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('products');
-    return saved ? JSON.parse(saved) : SEED_PRODUCTS;
-  });
+  const [products, setProducts] = useState<Product[]>(() => safeParse('products', SEED_PRODUCTS));
 
-  const [categories, setCategories] = useState<Category[]>(() => {
-    const saved = localStorage.getItem('categories');
-    return saved ? JSON.parse(saved) : [{id: '1', name: 'Electronics'}, {id: '2', name: 'Monitors'}];
-  });
+  const [categories, setCategories] = useState<Category[]>(() => 
+    safeParse('categories', [{id: '1', name: 'Electronics'}, {id: '2', name: 'Monitors'}])
+  );
 
-  const [brands, setBrands] = useState<Brand[]>(() => {
-    const saved = localStorage.getItem('brands');
-    return saved ? JSON.parse(saved) : [{id: '1', name: 'Logitech'}, {id: '2', name: 'Dell'}];
-  });
+  const [brands, setBrands] = useState<Brand[]>(() => 
+    safeParse('brands', [{id: '1', name: 'Logitech'}, {id: '2', name: 'Dell'}])
+  );
 
-  const [invoices, setInvoices] = useState<Invoice[]>(() => {
-    const saved = localStorage.getItem('invoices');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [invoices, setInvoices] = useState<Invoice[]>(() => safeParse('invoices', []));
 
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => {
-    const saved = localStorage.getItem('purchaseOrders');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => safeParse('purchaseOrders', []));
 
-  const [returns, setReturns] = useState<SalesReturn[]>(() => {
-    const saved = localStorage.getItem('returns');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [returns, setReturns] = useState<SalesReturn[]>(() => safeParse('returns', []));
 
   // --- Effects ---
   useEffect(() => localStorage.setItem('products', JSON.stringify(products)), [products]);

@@ -43,51 +43,63 @@ const SEED_USERS: User[] = [
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [allUsers, setAllUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem('invoice_users');
-    let users = saved ? JSON.parse(saved) : SEED_USERS;
-    
-    // Migration: Ensure all users have complete permissions object
-    users = users.map((u: any) => {
-      const isSuperOrAdmin = u.role === UserRole.SUPERADMIN || u.role === UserRole.ADMIN;
+    try {
+      const saved = localStorage.getItem('invoice_users');
+      let users = saved ? JSON.parse(saved) : SEED_USERS;
       
-      // If permissions missing or incomplete, fill defaults based on role
-      const existingPerms = u.permissions || {};
+      if (!Array.isArray(users)) return SEED_USERS;
+
+      // Migration: Ensure all users have complete permissions object
+      users = users.map((u: any) => {
+        const isSuperOrAdmin = u.role === UserRole.SUPERADMIN || u.role === UserRole.ADMIN;
+        
+        // If permissions missing or incomplete, fill defaults based on role
+        const existingPerms = u.permissions || {};
+        
+        return {
+          ...u,
+          permissions: {
+            inventory: existingPerms.inventory ?? true,
+            invoices: existingPerms.invoices ?? true,
+            // New fields default to true for existing admins, false for members
+            orders: existingPerms.orders ?? isSuperOrAdmin,
+            reports: existingPerms.reports ?? isSuperOrAdmin,
+            team: existingPerms.team ?? isSuperOrAdmin
+          }
+        };
+      });
       
-      return {
-        ...u,
-        permissions: {
-          inventory: existingPerms.inventory ?? true,
-          invoices: existingPerms.invoices ?? true,
-          // New fields default to true for existing admins, false for members
-          orders: existingPerms.orders ?? isSuperOrAdmin,
-          reports: existingPerms.reports ?? isSuperOrAdmin,
-          team: existingPerms.team ?? isSuperOrAdmin
-        }
-      };
-    });
-    
-    return users;
+      return users;
+    } catch (e) {
+      console.error("Failed to load users from storage, resetting.", e);
+      return SEED_USERS;
+    }
   });
 
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('invoice_current_user');
-    if (!saved) return null;
-    
-    const u = JSON.parse(saved);
-    // Migration for current user session
-    const isSuperOrAdmin = u.role === UserRole.SUPERADMIN || u.role === UserRole.ADMIN;
-    const existingPerms = u.permissions || {};
-    
-    return { 
-      ...u, 
-      permissions: {
-          inventory: existingPerms.inventory ?? true,
-          invoices: existingPerms.invoices ?? true,
-          orders: existingPerms.orders ?? isSuperOrAdmin,
-          reports: existingPerms.reports ?? isSuperOrAdmin,
-          team: existingPerms.team ?? isSuperOrAdmin
-      }
-    };
+    try {
+      const saved = localStorage.getItem('invoice_current_user');
+      if (!saved) return null;
+      
+      const u = JSON.parse(saved);
+      // Migration for current user session
+      const isSuperOrAdmin = u.role === UserRole.SUPERADMIN || u.role === UserRole.ADMIN;
+      const existingPerms = u.permissions || {};
+      
+      return { 
+        ...u, 
+        permissions: {
+            inventory: existingPerms.inventory ?? true,
+            invoices: existingPerms.invoices ?? true,
+            orders: existingPerms.orders ?? isSuperOrAdmin,
+            reports: existingPerms.reports ?? isSuperOrAdmin,
+            team: existingPerms.team ?? isSuperOrAdmin
+        }
+      };
+    } catch (e) {
+      console.error("Failed to load session from storage.", e);
+      return null;
+    }
   });
 
   useEffect(() => {

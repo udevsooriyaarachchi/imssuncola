@@ -6,7 +6,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      // Prevent "process is not defined" error if libraries try to access process.env
+      'process.env': JSON.stringify({}) 
     },
     build: {
       outDir: 'dist',
